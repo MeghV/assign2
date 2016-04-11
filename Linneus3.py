@@ -85,6 +85,10 @@ def linneus():
         process(info)
 
 # Some regular expressions used to parse the user sentences:    
+# assertion_pattern: "A [category1] is a [category2]."
+# query_pattern: "Is a [category1] a [category2]?"
+# what_pattern: "What is a [category]?"
+# why_pattern: "Why is a [category1] a [category2]?"
 assertion_pattern = compile(r"^(a|an|A|An)\s+([-\w]+)\s+is\s+(a|an)\s+([-\w]+)(\.|\!)*$", IGNORECASE)    
 query_pattern = compile(r"^is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 what_pattern = compile(r"^What\s+is\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
