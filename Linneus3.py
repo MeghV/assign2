@@ -101,6 +101,27 @@ def process(info) :
         items = result_match_object.groups()
         store_article(items[1], items[0])
         store_article(items[3], items[2])
+
+        # Direct Redundancy Detection
+         # Existing Relation Check
+        if isa_test1(items[1], items[3]):
+            print("You told me that earlier.")
+            return
+
+        # Reflexivity Property: a = a
+        if(items[3] == items[1]):
+            print("You don't have to tell me that.")
+            return
+
+        # Transitivity: a = b & b = c : a = c
+        inc_list = get_includes_list(items[3])
+        isa_list = get_isa_list(items[1])
+        for includes in inc_list:
+            if includes in isa_list:
+                print("You don't have to tell me that.")
+                return
+        
+        # Statement can create non-redundant relation
         store_isa_fact(items[1], items[3])
         print("I understand.")
         return
