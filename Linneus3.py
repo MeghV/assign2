@@ -135,6 +135,10 @@ def indirect_redundancy(category1):
             print "Your earlier statement that " + ARTICLES[redundant_chains[0][0]] + " " +\
                   redundant_chains[0][0] + " is " + ARTICLES[redundant_chains[0][1]] + " " +\
                   redundant_chains[0][1] + " is now redundant."
+            ISA[redundant_chains[0][0]].remove(redundant_chains[0][1])
+            INCLUDES[redundant_chains[0][1]].remove(redundant_chains[0][0])
+            print ISA
+            print INCLUDES
         # If multi indirect_redundancy (can also detect chained redundnacy)
         else:
             print "The following statements you made earlier are now all redundant:"
@@ -143,14 +147,22 @@ def indirect_redundancy(category1):
                 for j in find_chain(i[0], i[1]):
                     print ARTICLES[j[0]] + " " + j[0] + " is " + ARTICLES[j[1]] + " " +\
                           j[1] + ";"
+                    ISA[j[0]].remove(j[1])
+                    INCLUDES[j[1]].remove(j[0])
             # Get last redundant chain.
             for i in find_chain(redundant_chains[-1][0], redundant_chains[-1][1])[:-1]:
                     print ARTICLES[i[0]] + " " + i[0] + " is " + ARTICLES[i[1]] + " " +\
                           i[1] + ";"
-            # Get last link in redundant chain.
+                    ISA[i[0]].remove(i[1])
+                    INCLUDES[i[1]].remove(i[0])
+            # Get last link in last redundant chain.
             last = find_chain(redundant_chains[-1][0], redundant_chains[-1][1])[-1]
             print ARTICLES[last[0]] + " " + last[0] + " is " + ARTICLES[last[1]] + " " +\
                   last[1] + "."
+            ISA[last[0]].remove(last[1])
+            INCLUDES[last[1]].remove(last[0])
+            print ISA
+            print INCLUDES
     else:
         print "I understand"
 
@@ -247,14 +259,14 @@ def find_chain(x, z):
                 return temp
 
 def test() :
-    process("A hawk is a bird.")
-    process("A hawk is a raptor.")
-    process("A raptor is a bird.")
-
-    # process("A hawk is an animal.")
+    # process("A hawk is a bird.")
     # process("A hawk is a raptor.")
-    # process("A bird is an animal.")
     # process("A raptor is a bird.")
+
+    process("A hawk is an animal.")
+    process("A hawk is a raptor.")
+    process("A bird is an animal.")
+    process("A raptor is a bird.")
 
     # process("A chinook is an organism.")
     # process("A sockeye is a salmon.")
