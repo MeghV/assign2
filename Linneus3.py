@@ -107,19 +107,24 @@ def indirect_redundancy(category1):
     # Check each includes list for shared values with isa chain
     includes_chains = []
     category1_chain = []
+    # Get list of includes
     c1list = get_includes_list(category1)
+    # For each includes get terminating chains
     for i in c1list:
         global skip
         skip = category1
         get_terminating_chains(i, includes_chains, [i])
     skip = ""
+    # For category 1, get terminating chains
     get_terminating_chains(category1, category1_chain, [])
 
     count = 0
     redundant_chains = []
+    # Check each category 1 terminating chain, see if in includes terminating chains
     for i in range(len(category1_chain)):
         for j in category1_chain[i]:
             for k in includes_chains:
+                # If it is save it
                 if j in k:
                     count += 1
                     redundant_chains.append(list([k[0], j]))
@@ -130,16 +135,19 @@ def indirect_redundancy(category1):
             print "Your earlier statement that " + ARTICLES[redundant_chains[0][0]] + " " +\
                   redundant_chains[0][0] + " is " + ARTICLES[redundant_chains[0][1]] + " " +\
                   redundant_chains[0][1] + " is now redundant."
-        # If multi indirect_redundancy
+        # If multi indirect_redundancy (can also detect chained redundnacy)
         else:
             print "The following statements you made earlier are now all redundant:"
+            # Get redundant chains except for last one
             for i in redundant_chains[:-1]:
                 for j in find_chain(i[0], i[1]):
                     print ARTICLES[j[0]] + " " + j[0] + " is " + ARTICLES[j[1]] + " " +\
                           j[1] + ";"
+            # Get last redundant chain.
             for i in find_chain(redundant_chains[-1][0], redundant_chains[-1][1])[:-1]:
                     print ARTICLES[i[0]] + " " + i[0] + " is " + ARTICLES[i[1]] + " " +\
                           i[1] + ";"
+            # Get last link in redundant chain.
             last = find_chain(redundant_chains[-1][0], redundant_chains[-1][1])[-1]
             print ARTICLES[last[0]] + " " + last[0] + " is " + ARTICLES[last[1]] + " " +\
                   last[1] + "."
