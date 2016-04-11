@@ -90,32 +90,40 @@ query_pattern = compile(r"^is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", I
 what_pattern = compile(r"^What\s+is\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 why_pattern = compile(r"^Why\s+is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 
-def terminating_chains(start, endlist, templist):
+skip = ""
+def get_terminating_chains(start, endlist, templist):
     if get_isa_list(start):
-        for intermediate_category in get_isa_list(start):
-            templist.append(intermediate_category)
-            terminating_chains(intermediate_category, endlist, templist)
-            templist.pop()
+        global skip
+        if start != skip:
+            for intermediate_category in get_isa_list(start):
+                templist.append(intermediate_category)
+                get_terminating_chains(intermediate_category, endlist, templist)
+                templist.pop()
     else:
         endlist.append(list(templist))
 
-def redundancy(category1):
+def indirect_redundancy(category1):
     # Get all terminating chains
-    endlist = []
-    terminating_chains(category1, endlist, [])
-    print endlist
+    # Check each includes list for shared values with isa chain
+    includes_chains = []
+    category1_chain = []
+    c1list = get_includes_list(category1)
+    for i in c1list:
+        global skip
+        skip = category1
+        get_terminating_chains(i, includes_chains, [i])
+    skip = ""
+    get_terminating_chains(category1, category1_chain, [])
+    print category1_chain
+    print includes_chains
 
-    # # Check each in includes list for shared values with isa chain
-    # c1list = get_includes_list(category1)
-    # for i in range(len(c1list)):
-    #     c1list[i]
-    # count = 0
+
     # if count < 0:
-    #     # If single redundancy
+    #     # If single indirect_redundancy
     #     if count == 1:
     #         # Complete
     #         print "Your earlier statement that " 
-    #     # If multi redundancy
+    #     # If multi indirect_redundancy
     #     else:
     #         print "The following statements you made earlier are now all redundant:"
     #         for i in range(count):
@@ -132,7 +140,7 @@ def process(info) :
         store_article(items[1], items[0])
         store_article(items[3], items[2])
         store_isa_fact(items[1], items[3])
-        redundancy(items[1])
+        indirect_redundancy(items[1])
         return
     result_match_object = query_pattern.match(info)
     if result_match_object != None :
@@ -217,11 +225,19 @@ def find_chain(x, z):
                 return temp
 
 def test() :
-    process("An animal is an organism")
-    process("An animal is a robot")
-    process("A fish is an animal.")
-    process("A salmon is a fish.")
-    process("A sockey is a salmon.")
+    process("A hawk is an animal.")
+    process("A hawk is a raptor.")
+    process("A bird is an animal.")
+    process("A raptor is a bird.")
+    # process("A chinook is an organism.")
+    # process("A sockeye is a salmon.")
+    # process("A fish is an animal.")
+    # process("A sockeye is an organism.")
+    # process("A chinook is an animal.")
+    # process("A chinook is a salmon.")
+    # process("A sockeye is an animal.")
+    # process("A fish is an organism.")
+    # process("A salmon is a fish.")
 
 test()
 linneus()
