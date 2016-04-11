@@ -90,30 +90,39 @@ query_pattern = compile(r"^is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", I
 what_pattern = compile(r"^What\s+is\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 why_pattern = compile(r"^Why\s+is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 
-def terminating_cains(start):
-    
+def terminating_chains(start, endlist, templist):
+    if get_isa_list(start):
+        for intermediate_category in get_isa_list(start):
+            templist.append(intermediate_category)
+            terminating_chains(intermediate_category, endlist, templist)
+            templist.pop()
+    else:
+        endlist.append(list(templist))
 
 def redundancy(category1):
     # Get all terminating chains
+    endlist = []
+    terminating_chains(category1, endlist, [])
+    print endlist
 
-    c1list = get_includes_list(category1)
-    # Check each in includes list for shared values with isa chain
-    for i in range(len(c1list)):
-        c1list[i]
-    count = 0
-    if count < 0:
-        # If single redundancy
-        if count == 1:
-            # Complete
-            print "Your earlier statement that " 
-        # If multi redundancy
-        else:
-            print "The following statements you made earlier are now all redundant:"
-            for i in range(count):
-                return 0
-                # Do something
-    else:
-        print "I understand"
+    # # Check each in includes list for shared values with isa chain
+    # c1list = get_includes_list(category1)
+    # for i in range(len(c1list)):
+    #     c1list[i]
+    # count = 0
+    # if count < 0:
+    #     # If single redundancy
+    #     if count == 1:
+    #         # Complete
+    #         print "Your earlier statement that " 
+    #     # If multi redundancy
+    #     else:
+    #         print "The following statements you made earlier are now all redundant:"
+    #         for i in range(count):
+    #             return 0
+    #             # Do something
+    # else:
+    #     print "I understand"
 
 def process(info) :
     'Handles the user sentence, matching and responding.'
@@ -208,10 +217,11 @@ def find_chain(x, z):
                 return temp
 
 def test() :
-    process("A turtle is a reptile.")
-    process("A turtle is a shelled-creature.")
-    process("A reptile is an animal.")
-    process("An animal is a thing.")
+    process("An animal is an organism")
+    process("An animal is a robot")
+    process("A fish is an animal.")
+    process("A salmon is a fish.")
+    process("A sockey is a salmon.")
 
 test()
 linneus()
