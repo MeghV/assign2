@@ -19,7 +19,7 @@ INCLUDES = {}
 ARTICLES = {}
 
 # Each entry in the QUALIFIERS dictionary is of the form
-# ( 'animal': { 'organism': ['Jones'], 'living-thing': None } )
+# ( 'animal': { 'organism': ['Jones'], 'living-thing': [] } )
 # corresponds to the statements:
 # "Jones says than an animal is an organism"
 # "An animal is a living-thing."
@@ -40,6 +40,18 @@ def store_isa_fact(category1, category2, qualifier = None):
         c1list.append(category2)
     except KeyError :
         ISA[category1] = [category2]
+    try:
+        c1qualifiers = QUALIFIERS[category1]
+        if category2 in c1qualifiers and qualifier is not None:
+            c1qualifiers[category2].append(qualifier) 
+        else:
+            c1qualifiers[category2] = [qualifier]
+    except KeyError:
+          # Add ISA statement and qualifier list if qualifier is present
+        if qualifier is not None:
+            QUALIFIERS[category1] = { category2: [ qualifier ]   }
+        else: 
+            QUALIFIERS[category1] = { category2: [ ] }
     try :
         c2list = INCLUDES[category2]
         c2list.append(category1)
