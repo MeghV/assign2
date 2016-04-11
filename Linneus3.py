@@ -90,20 +90,29 @@ query_pattern = compile(r"^is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", I
 what_pattern = compile(r"^What\s+is\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 why_pattern = compile(r"^Why\s+is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 
+def terminating_cains(start):
+    
+
 def redundancy(category1):
-    print "enter"
-    # count = 0
-    # if count < 0:
-    #     # If single redundancy
-    #     if count == 1:
-    #         # Complete
-    #         print "Your earlier statement that " 
-    #     # If multi redundancy
-    #     else:
-    #         print "The following statements you made earlier are now all redundant:"
-    #         for i in range(count):
-    #             # Do something
-    # else:
+    # Get all terminating chains
+
+    c1list = get_includes_list(category1)
+    # Check each in includes list for shared values with isa chain
+    for i in range(len(c1list)):
+        c1list[i]
+    count = 0
+    if count < 0:
+        # If single redundancy
+        if count == 1:
+            # Complete
+            print "Your earlier statement that " 
+        # If multi redundancy
+        else:
+            print "The following statements you made earlier are now all redundant:"
+            for i in range(count):
+                return 0
+                # Do something
+    else:
         print "I understand"
 
 def process(info) :
@@ -114,7 +123,7 @@ def process(info) :
         store_article(items[1], items[0])
         store_article(items[3], items[2])
         store_isa_fact(items[1], items[3])
-        redundancy(itesm[1])
+        redundancy(items[1])
         return
     result_match_object = query_pattern.match(info)
     if result_match_object != None :
