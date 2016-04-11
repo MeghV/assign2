@@ -114,23 +114,37 @@ def indirect_redundancy(category1):
         get_terminating_chains(i, includes_chains, [i])
     skip = ""
     get_terminating_chains(category1, category1_chain, [])
-    print category1_chain
-    print includes_chains
 
-
-    # if count < 0:
-    #     # If single indirect_redundancy
-    #     if count == 1:
-    #         # Complete
-    #         print "Your earlier statement that " 
-    #     # If multi indirect_redundancy
-    #     else:
-    #         print "The following statements you made earlier are now all redundant:"
-    #         for i in range(count):
-    #             return 0
-    #             # Do something
-    # else:
-    #     print "I understand"
+    count = 0
+    redundant_chains = []
+    for i in range(len(category1_chain)):
+        for j in category1_chain[i]:
+            for k in includes_chains:
+                if j in k:
+                    count += 1
+                    redundant_chains.append(list([k[0], j]))
+    if count > 0:
+        # If single indirect_redundancy
+        if count == 1:
+            # Complete
+            print "Your earlier statement that " + ARTICLES[redundant_chains[0][0]] + " " +\
+                  redundant_chains[0][0] + " is " + ARTICLES[redundant_chains[0][1]] + " " +\
+                  redundant_chains[0][1] + " is now redundant."
+        # If multi indirect_redundancy
+        else:
+            print "The following statements you made earlier are now all redundant:"
+            for i in redundant_chains[:-1]:
+                for j in find_chain(i[0], i[1]):
+                    print ARTICLES[j[0]] + " " + j[0] + " is " + ARTICLES[j[1]] + " " +\
+                          j[1] + ";"
+            for i in find_chain(redundant_chains[-1][0], redundant_chains[-1][1])[:-1]:
+                    print ARTICLES[i[0]] + " " + i[0] + " is " + ARTICLES[i[1]] + " " +\
+                          i[1] + ";"
+            last = find_chain(redundant_chains[-1][0], redundant_chains[-1][1])[-1]
+            print ARTICLES[last[0]] + " " + last[0] + " is " + ARTICLES[last[1]] + " " +\
+                  last[1] + "."
+    else:
+        print "I understand"
 
 def process(info) :
     'Handles the user sentence, matching and responding.'
@@ -225,10 +239,15 @@ def find_chain(x, z):
                 return temp
 
 def test() :
-    process("A hawk is an animal.")
+    process("A hawk is a bird.")
     process("A hawk is a raptor.")
-    process("A bird is an animal.")
     process("A raptor is a bird.")
+
+    # process("A hawk is an animal.")
+    # process("A hawk is a raptor.")
+    # process("A bird is an animal.")
+    # process("A raptor is a bird.")
+
     # process("A chinook is an organism.")
     # process("A sockeye is a salmon.")
     # process("A fish is an animal.")
