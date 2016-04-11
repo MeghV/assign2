@@ -90,6 +90,22 @@ query_pattern = compile(r"^is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", I
 what_pattern = compile(r"^What\s+is\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 why_pattern = compile(r"^Why\s+is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)    
 
+def redundancy(category1):
+    print "enter"
+    # count = 0
+    # if count < 0:
+    #     # If single redundancy
+    #     if count == 1:
+    #         # Complete
+    #         print "Your earlier statement that " 
+    #     # If multi redundancy
+    #     else:
+    #         print "The following statements you made earlier are now all redundant:"
+    #         for i in range(count):
+    #             # Do something
+    # else:
+        print "I understand"
+
 def process(info) :
     'Handles the user sentence, matching and responding.'
     result_match_object = assertion_pattern.match(info)
@@ -98,7 +114,7 @@ def process(info) :
         store_article(items[1], items[0])
         store_article(items[3], items[2])
         store_isa_fact(items[1], items[3])
-        print("I understand.")
+        redundancy(itesm[1])
         return
     result_match_object = query_pattern.match(info)
     if result_match_object != None :
