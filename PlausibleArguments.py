@@ -9,10 +9,8 @@
 
 # The ISA relation is represented using a dictionary, ISA.
 # There is a corresponding inverse dictionary, INCLUDES.
-# Each entry in the ISA dictionary contains its parent
-# category as well as the qualifier (if one exists).
-#  ('animal' : [ ['organism', 'Jones'] ) == "Jones says that an animal is an organism."
-#  ('dog' : [ ['animal', None] ] ) == "A dog is an animal."
+# Each entry in the ISA dictionary is of the form
+#  ('turtle' : ['reptile', 'shelled-creature'])
 
 from re import *   # Loads the regular expression module.
 
@@ -20,11 +18,18 @@ ISA = {}
 INCLUDES = {}
 ARTICLES = {}
 
+# Each entry in the QUALIFIERS dictionary is of the form
+# ( 'animal': { 'organism': ['Jones'], 'living-thing': None } )
+# corresponds to the statements:
+# "Jones says than an animal is an organism"
+# "An animal is a living-thing."
+QUALIFIERS = {}
+
 # Stores reliability information - a boolean for relability
 # as well as the source of this information (whether the info
 # is qualified or not.) The structure will look like so:
-#  ( 'Smith': [ True, 'Jones' ] ) == "Jones says that Smith is a reliable source."
-#  ( 'Jones': [ False, None ] ) == "Jones is an unreliable source."
+#  ( 'Smith': [ reliable: True, qualifier: ['Jones'] ] ) == "Jones says that Smith is a reliable source."
+#  ( 'Jones': { reliable: False , qualifier: [] ] ) == "Jones is an unreliable source."
 RELIABILITY = {}
 
 def store_isa_fact(category1, category2, qualifier = None):
