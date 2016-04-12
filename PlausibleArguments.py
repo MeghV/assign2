@@ -250,10 +250,15 @@ qualified_pattern = compile(r"^([-\w]+)\s+says\s+that\s+", IGNORECASE)
 # Reliability statement: "[somebody] is a/an reliable/unreliable source. "
 reliability_pattern = compile(r"^([-\w]+)\s+is\s+(a|an)\s+(reliable|unreliable)\s+(source)(\.|\!)*$", IGNORECASE)
 # Why style 1: Why is it possible that [category1] is [category2]?
-plausible_why_pattern = compile(r"Why\s+is\s+it\s+possible\s+that\s+(a|an)\s+([-\w]+)\s+is+\s+(a|an)\s+([-\w]+)(\?\.)*", IGNORECASE)
+plausible_why_pattern = compile(r"^Why\s+is\s+it\s+possible\s+that\s+(a|an)\s+([-\w]+)\s+is+\s+(a|an)\s+([-\w]+)(\?\.)*$", IGNORECASE)
+# Why style 2: Why?
+short_why_pattern = compile(r"^Why(\?)*$", IGNORECASE)
+
+last_statement = None
 
 def process(info) :
     'Handles the user sentence, matching and responding.'
+    global last_statement
     name = None
     # Check if statement is qualified
     qualifier_match_object = qualified_pattern.match(info)
@@ -267,6 +272,7 @@ def process(info) :
         items = result_match_object.groups()
         store_article(items[1], items[0])
         store_article(items[3], items[2])
+        last_statement = items
 
         # Direct Redundancy Detection
         # Existing Relation Check
@@ -296,6 +302,7 @@ def process(info) :
     if result_match_object != None :
         items = result_match_object.groups()
         answer = isa_test(items[1], items[3])
+        last_statement = items
         if answer :
             # Now we check if it is qualified:
             qualified = qualify_test(items[1], items[3])
@@ -317,6 +324,7 @@ def process(info) :
     if result_match_object != None :
         items = result_match_object.groups()
         supersets = get_isa_list(items[1])
+
         if supersets != [] :
             first = supersets[0]
             a1 = get_article(items[1]).capitalize()
@@ -341,6 +349,7 @@ def process(info) :
             print("But that's not true, as far as I know!")
         else:
             answer_why(items[1], items[3])
+            last_statement = items
         return
     
     # Checking for reliability statements:
@@ -362,6 +371,15 @@ def process(info) :
         items = result_match_object.groups()
         print(qualifier_test(items[1], items[3]))
         return
+    # Checking for other plausible argument
+    # "Why?"
+    # Requires that a previous statement has been made
+    result_match_object = short_why_pattern.match(info)
+    if result_match_object != None:
+        if last_statement is not None:
+            print(qualifier_test(last_statement[1], last_statement[3]))
+            return
+        last_statement = None
 
 def answer_why(x, y):
     'Handles the answering of a Why question.'
