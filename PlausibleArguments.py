@@ -323,7 +323,7 @@ qualified_pattern = compile(r"^([-\w]+)\s+says\s+that?\s+?", IGNORECASE)
 # Reliability statement: "[somebody] is a/an reliable/unreliable source. "
 reliability_pattern = compile(r"^([-\w]+)\s+is\s+(a|an)\s+(reliable|unreliable)\s+(source)(\.|\!)*$", IGNORECASE)
 # Why style 1: Why is it possible that [category1] is [category2]?
-plausible_why_pattern = compile(r"^Why\s+is\s+it\s+possible\s+that\s+(a|an)\s+([-\w]+)\s+is+\s+(a|an)\s+([-\w]+)(\?\.)*$", IGNORECASE)
+plausible_why_pattern = compile(r"^Why\s+is\s+it\s+possible\s+that\s+(a|an)\s+([-\w]+)\s+is+\s+(a|an)\s+([-\w]+)(\?|\.)*$", IGNORECASE)
 # Why style 2: Why?
 short_why_pattern = compile(r"^Why(\?)*$", IGNORECASE)
 
