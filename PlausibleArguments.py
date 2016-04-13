@@ -171,7 +171,7 @@ def report_chain_with_qualifiers(category1, category2):
             resp += report_link([c1_link, c2_link], ",\n")
         
             if i + 1 == len(links) - 1:
-                resp += ".\n"
+                resp += "."
             else:
                 resp += ",\nand "
             i += 1
@@ -184,6 +184,7 @@ def report_chain_with_qualifiers(category1, category2):
         for qualifier in set(qualifying_sources):
             if qualifier in RELIABILITY:
                 if "unreliable" in RELIABILITY[qualifier]:
+                    resp += "\n"
                     # this person has been called "unreliable".
                     # now we explore if this statement has been qualified.
                     unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
@@ -236,7 +237,7 @@ def qualifier_test(category1, category2, depth_limit = 10):
             resp += ARTICLES[trail[i]] + " " + trail[i] + " is " +\
                     ARTICLES[trail[i+1]]+  " " + trail[i+1] 
             if i + 1 == len(trail) - 1:
-                resp += ".\n"
+                resp += "."
             else:
                 resp += ",\nand "
             i += 1
@@ -249,6 +250,7 @@ def qualifier_test(category1, category2, depth_limit = 10):
         for qualifier in set(qualifying_sources):
             if qualifier in RELIABILITY:
                 if "unreliable" in RELIABILITY[qualifier]:
+                    resp += "\n"
                     # this person has been called "unreliable".
                     # now we explore if this statement has been qualified.
                     unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
@@ -322,10 +324,13 @@ why_pattern = compile(r"^Why\s+is\s+(a|an)\s+([-\w]+)\s+(a|an)\s+([-\w]+)(\?\.)*
 qualified_pattern = compile(r"^([-\w]+)\s+says\s+that?\s+?", IGNORECASE)
 # Reliability statement: "[somebody] is a/an reliable/unreliable source. "
 reliability_pattern = compile(r"^([-\w]+)\s+is\s+(a|an)\s+(reliable|unreliable)\s+(source)(\.|\!)*$", IGNORECASE)
-# Why style 1: Why is it possible that [category1] is [category2]?
+# Reliability question: "Why is [somebody] a/an reliable/unreliable source?"
+reliability_why_pattern = compile(r"^(Why)?[\s+]?is\s+([-\w]+)\s+(a|an)\s+(reliable|unreliable)\s+(source)(\?)*$", IGNORECASE)
+# Why style 1a: Why is it possible that [category1] is [category2]?
 plausible_why_pattern = compile(r"^Why\s+is\s+it\s+possible\s+that\s+(a|an)\s+([-\w]+)\s+is+\s+(a|an)\s+([-\w]+)(\?|\.)*$", IGNORECASE)
 # Why style 2: Why?
 short_why_pattern = compile(r"^Why(\?)*$", IGNORECASE)
+
 
 last_statement = None
 
@@ -396,7 +401,8 @@ def process(info) :
         # categories are not directly linked, so we check for
         # an indirect link through ISA chains
         elif isa_test(items[1], items[3]):
-            print("It's quite possible that a dog is an organism.")
+            print("It's quite possible that " + ARTICLES[items[1]] + " " +\
+                    items[1] + " is " + ARTICLES[items[3]] + " " + items[3] + ".")
         else:
             print("I have no reason to believe so.")
         return
@@ -444,6 +450,57 @@ def process(info) :
         print("I understand.")
         return
 
+    # Checking for reliabiltiy question:
+    # "Why is [somebody] a/an reliable/unreliable source?"
+    # "Is [somebody] a/an reliable/unreliable source?"
+    result_match_object = reliability_why_pattern.match(info)
+    if result_match_object != None:
+        items = result_match_object.groups()
+        why_q = (items[0] != None and items[0].lower() == 'why')
+        name = items[1]
+        reliability_term = items[3]
+        article = items[2]
+        if reliability_term == "reliable":
+            opposite_reliability = "unreliable"
+        elif reliability_term == "unreliable":
+            opposite_reliability = "unreliable"
+        if name in RELIABILITY:
+            resp = ""
+            
+            reliability_information = RELIABILITY[name]
+            if reliability_term in reliability_information:
+                if not why_q:
+                    resp += "Yes, "
+                else:
+                    resp += "Because "
+                reliability_qualifiers = reliability_information[reliability_term]
+                if len(reliability_qualifiers) >= 1:
+                    resp += reliability_qualifiers[0] + " "
+                    for person in reliability_qualifiers[1:]:
+                        resp += "and " + person + " "
+                else:
+                    resp += "you "
+                resp += "told me that."
+                print(resp)
+                return
+            resp += "I don't know if " + name + " is " + article + " " + reliability_term + " source"
+
+            if opposite_reliability in reliability_information:
+                opposite_reliability_qualifiers = reliability_information[opposite_reliability]
+                resp += ",\nbut "
+                if len(opposite_reliability_qualifiers) >= 1:
+                    resp += opposite_reliability_qualifiers[0] + " "
+                    for person in opposite_reliability_qualifiers[1:]:
+                        resp += "and " + person + " "
+                else:
+                    resp += "you "
+                resp += "told me that " + name + " is " + article + " " + opposite_reliability + " source"
+            resp += "."
+            print(resp)
+            return
+        print("I have no information about the reliability of " + name + ".")
+        return
+
     # Checking for plausible argument
     # "Why is it possible that [category1] is [category2?"
     result_match_object = plausible_why_pattern.match(info)
@@ -469,7 +526,17 @@ def answer_why(x, y):
         print("Because they are identical.")
         return
     if isa_test1(x, y):
-        print("Because you told me that.")
+        # check who said it
+        isa_qualifiers = find_qualifiers(x,y)
+        resp = "Because "
+        if len(isa_qualifiers) >= 1:
+            resp += isa_qualifiers[0] + " "
+            for qualifier in isa_qualifiers[1:]:
+                resp += "and " + qualifier + " "
+        else:
+            resp += "you "
+        resp += "told me that."
+        print(resp)
         return
     print("Because " + report_chain(x, y))
     return
