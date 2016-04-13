@@ -182,26 +182,27 @@ def report_chain_with_qualifiers(category1, category2):
         # and Jones says that an animal is an organism.
         # Now we check for unreliable sources within the chain:
         for qualifier in set(qualifying_sources):
-            if "unreliable" in RELIABILITY[qualifier]:
-                # this person has been called "unreliable".
-                # now we explore if this statement has been qualified.
-                unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
-                if len(unreliablity_qualifiers) == 1: 
-                    # exactly one person has said this qualifier is unreliable
-                    resp += "However, " + unreliablity_qualifiers[0] + " says that " +\
-                            qualifier + " is an unreliable source,"
-                elif len(unreliablity_qualifiers) > 1:
-                    # multiple people have said that this qualifier is unreliable
-                    resp += "However, " + unreliablity_qualifiers[0]
-                    for unreliablity_somebody in unreliablity_qualifiers[1:]:
-                        resp += " and " + unreliablity_somebody
-                    resp += " say that " + qualifier + " is an unreliable source,"
-                else:
-                    # an unqualified statement has been made about this qualifier's
-                    # reliability (the USER wrote "[somebody] is unreliable...")
-                    resp += "However, " + qualifier + " is an unreliable source,"
+            if qualifier in RELIABILITY:
+                if "unreliable" in RELIABILITY[qualifier]:
+                    # this person has been called "unreliable".
+                    # now we explore if this statement has been qualified.
+                    unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
+                    if len(unreliablity_qualifiers) == 1: 
+                        # exactly one person has said this qualifier is unreliable
+                        resp += "However, " + unreliablity_qualifiers[0] + " says that " +\
+                                qualifier + " is an unreliable source,"
+                    elif len(unreliablity_qualifiers) > 1:
+                        # multiple people have said that this qualifier is unreliable
+                        resp += "However, " + unreliablity_qualifiers[0]
+                        for unreliablity_somebody in unreliablity_qualifiers[1:]:
+                            resp += " and " + unreliablity_somebody
+                        resp += " say that " + qualifier + " is an unreliable source,"
+                    else:
+                        # an unqualified statement has been made about this qualifier's
+                        # reliability (the USER wrote "[somebody] is unreliable...")
+                        resp += "However, " + qualifier + " is an unreliable source,"
 
-                resp += "\nand therefore we cannot be certain about this chain of reasoning."
+                    resp += "\nand therefore we cannot be certain about this chain of reasoning."
 
         return resp
     return "It is not possible that " +\
@@ -223,7 +224,7 @@ def qualifier_test(category1, category2, depth_limit = 10):
                 qualifying_sources.append(qualifier)
                 resp += qualifier + " says that "
             elif len(isa_qualifiers) > 1:
-                resp += isa_qualifiers[0]
+                resp += isa_qualifiers[0] + " "
                 initial_qualifier = isa_qualifiers[0]
                 qualifying_sources.append(initial_qualifier)
                 for qualifier in isa_qualifiers[1:]:
@@ -246,31 +247,32 @@ def qualifier_test(category1, category2, depth_limit = 10):
         # and Jones says that an animal is an organism.
         # Now we check for unreliable sources within the chain:
         for qualifier in set(qualifying_sources):
-            if "unreliable" in RELIABILITY[qualifier]:
-                # this person has been called "unreliable".
-                # now we explore if this statement has been qualified.
-                unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
-                if len(unreliablity_qualifiers) == 1: 
-                    # exactly one person has said this qualifier is unreliable
-                    resp += "However, " + unreliablity_qualifiers[0] + " says that " +\
-                            qualifier + " is an unreliable source,"
-                elif len(unreliablity_qualifiers) > 1:
-                    # multiple people have said that this qualifier is unreliable
-                    resp += "However, " + unreliablity_qualifiers[0]
-                    for unreliablity_somebody in unreliablity_qualifiers[1:]:
-                        resp += " and " + unreliablity_somebody
-                    resp += " say that " + qualifier + " is an unreliable source,"
-                else:
-                    # an unqualified statement has been made about this qualifier's
-                    # reliability (the USER wrote "[somebody] is unreliable...")
-                    resp += "However, " + qualifier + " is an unreliable source,"
+            if qualifier in RELIABILITY:
+                if "unreliable" in RELIABILITY[qualifier]:
+                    # this person has been called "unreliable".
+                    # now we explore if this statement has been qualified.
+                    unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
+                    if len(unreliablity_qualifiers) == 1: 
+                        # exactly one person has said this qualifier is unreliable
+                        resp += "However, " + unreliablity_qualifiers[0] + " says that " +\
+                                qualifier + " is an unreliable source,"
+                    elif len(unreliablity_qualifiers) > 1:
+                        # multiple people have said that this qualifier is unreliable
+                        resp += "However, " + unreliablity_qualifiers[0]
+                        for unreliablity_somebody in unreliablity_qualifiers[1:]:
+                            resp += " and " + unreliablity_somebody
+                        resp += " say that " + qualifier + " is an unreliable source,"
+                    else:
+                        # an unqualified statement has been made about this qualifier's
+                        # reliability (the USER wrote "[somebody] is unreliable...")
+                        resp += "However, " + qualifier + " is an unreliable source,"
 
-                resp += "\nand therefore we cannot be certain about this chain of reasoning."
+                    resp += "\nand therefore we cannot be certain about this chain of reasoning."
         return resp
     else:
         return "It is not possible."
 
-def qualify_test1(category1, category2, qualifier = None):
+def qualifier_for_chain(category1, category2, qualifier = None):
     'Returns True if the qualifier exists for category 1 to category 2.'
     qualifierList = QUALIFIERS[category1]
     if qualifier is not None:
@@ -347,7 +349,7 @@ def process(info) :
 
         # Direct Redundancy Detection
         # Existing Relation Check
-        if isa_test1(items[1], items[3]) and qualify_test1(items[1], items[3], name):
+        if isa_test1(items[1], items[3]) and qualifier_for_chain(items[1], items[3], name):
             print("You told me that earlier.")
             return
 
@@ -372,23 +374,30 @@ def process(info) :
     result_match_object = query_pattern.match(info)
     if result_match_object != None :
         items = result_match_object.groups()
-        answer = isa_test(items[1], items[3])
         last_statement = items
-        if answer :
-            # Now we check if it is qualified:
-            qualified = qualify_test(items[1], items[3])
-            resp = ""
-            if len(qualified) == 1:
-                print(qualified[0] + " says that it is.")
-            elif len(qualified) > 1:
-                resp += qualified[0]
-                for name in qualified[1:]:
-                    resp += " and " + name
-                resp += " say that it is."
+        # check if they're a direct match
+        if isa_test1(items[1], items[3]):
+            # now we check if someone has qualified the 
+            # directly linked statement
+            isa_qualifiers = find_qualifiers(items[1], items[3])
+            if len(isa_qualifiers) >= 1:
+                resp = ""
+                qualifier = isa_qualifiers[0]
+                resp += qualifier + " "
+                for qualifier in isa_qualifiers[1:]:
+                    resp += "and " + qualifier + " "
+                if len(isa_qualifiers) > 1:
+                    resp += "say that it is."
+                else:
+                    resp += "says that it is."
                 print(resp)
             else:
                 print("Yes, it is.")
-        else :
+        # categories are not directly linked, so we check for
+        # an indirect link through ISA chains
+        elif isa_test(items[1], items[3]):
+            print("It's quite possible that a dog is an organism.")
+        else:
             print("I have no reason to believe so.")
         return
     result_match_object = what_pattern.match(info)
@@ -432,7 +441,7 @@ def process(info) :
         # TODO: check if name already matched
         store_reliability_statement(items[0], items[2], name)
 
-        print("Reliability statement! I understand.")
+        print("I understand.")
         return
 
     # Checking for plausible argument
