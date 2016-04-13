@@ -330,26 +330,20 @@ def process(info) :
                 # For each element in each list in cyclelist
                 # Add all elements to a single value list and remove the old key/value pair
                 ALIASES[i[0]] = []
-                print i
                 for j in i[1:]:
                     ISA[i[0]] += ISA[j]
+                    INCLUDES[i[0]] += INCLUDES[j]
                     ALIASES[i[0]] += [j]
                     ISA.pop(j)
-                    print INCLUDES
-                    print ISA
+                    INCLUDES.pop(j)
                     # For each key/value pair in ISA
                     # Replace all occurances of the current value with the merged node value
                     for k in ISA:
                         if j in ISA[k] and not k == i[0]:
                             ISA[k].remove(j)
                             ISA[k].append(i[0])
-                    # Add all includes to the represntative value.
-                    for k in INCLUDES:
-                        for l in INCLUDES[k]:
-                            if not l == i[0]:
-                                INCLUDES[i[0]] += [l]
-                    INCLUDES.pop(j,)
                 ISA[i[0]].remove(i[0])
+                INCLUDES[i[0]].remove(i[0])
         else:
             print("I understand.")
             return
