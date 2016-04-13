@@ -297,6 +297,9 @@ def process(info) :
         store_isa_fact(items[1], items[3], name)
         print("I understand.")
         return
+
+        
+        
     # Is a [cat1] a [cat2]?
     result_match_object = query_pattern.match(info)
     if result_match_object != None :
