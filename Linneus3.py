@@ -4,8 +4,7 @@
 # Intelligence".
 # This version runs under Python 3.x.
 
-# Steven Tanimoto
-# (C) 2012.
+# Ryan Chui & Megh Vakharia
 
 # The ISA relation is represented using a dictionary, ISA.
 # There is a corresponding inverse dictionary, INCLUDES.

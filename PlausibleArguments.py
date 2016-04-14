@@ -1,26 +1,25 @@
-# Linneus3.py
-# Implements storage and inference on an ISA hierarchy
-# This Python program goes with the book "The Elements of Artificial
-# Intelligence".
+# PlausibleArguments.py
+# Implements storage and inference on an ISA hierarchy. 
+# Additionally, both qualified and unqualified statements
+# about ISA heirarchies are stored and displayed to the
+# user.
 # This version runs under Python 3.x.
 
-# Steven Tanimoto
-# (C) 2012.
+# Ryan Chui & Megh Vakharia
+
+from re import *   # Loads the regular expression module.
 
 # The ISA relation is represented using a dictionary, ISA.
 # There is a corresponding inverse dictionary, INCLUDES.
 # Each entry in the ISA dictionary is of the form
 #  ('turtle' : ['reptile', 'shelled-creature'])
-
-from re import *   # Loads the regular expression module.
-
 ISA = {}
 INCLUDES = {}
 ARTICLES = {}
 
-# Each entry in the QUALIFIERS dictionary is of the form
+# Each entry in the QUALIFIERS dictionary is of the form:
 # ( 'animal': { 'organism': ['Jones'], 'living-thing': [] } )
-# corresponds to the statements:
+# The above corresponds to the statements:
 # "Jones says than an animal is an organism"
 # "An animal is a living-thing."
 QUALIFIERS = {}
@@ -34,6 +33,10 @@ QUALIFIERS = {}
 RELIABILITY = {}
 
 def store_reliability_statement(target, reliableLabel, qualifier = None):
+    """
+    Stores the statement of reliability to the target. If the qualifier's name
+    is passed in, it is stored with the reliability statement.
+    """
     try:
         targetList = RELIABILITY[target]
         if reliableLabel in targetList:
@@ -51,8 +54,10 @@ def store_reliability_statement(target, reliableLabel, qualifier = None):
             RELIABILITY[target] = { reliableLabel : [ ] }
 
 def store_isa_fact(category1, category2, qualifier = None):
-    'Stores one fact of the form A BIRD IS AN ANIMAL'
-    # That is, a member of CATEGORY1 is a member of CATEGORY2
+    """
+    Stores one fact of the form A BIRD IS AN ANIMAL. If the statement
+    has been qualified, the qualifier's name is stored as well.
+    """
     try :
         c1list = ISA[category1]
         if category2 not in c1list: c1list.append(category2)
@@ -69,7 +74,6 @@ def store_isa_fact(category1, category2, qualifier = None):
             else:
                 c1qualifiers[category2] = []
     except KeyError:
-          # Add ISA statement and qualifier list if qualifier is present
         if qualifier is not None:
             QUALIFIERS[category1] = { category2: [ qualifier ]   }
         else: 
@@ -112,6 +116,7 @@ def isa_test(category1, category2, depth_limit = 10):
     return False
 
 def isa_test_with_trail(category1, category2, depth_limit = 10):
+    'Returns the chain of facts that connects category1 to category2.'
     trail = []
     if category1 == category2 : 
         trail += [category1]
@@ -128,15 +133,6 @@ def isa_test_with_trail(category1, category2, depth_limit = 10):
             return trail
     return []
 
-# def report_chain(x, y):
-#     'Returns a phrase that describes a chain of facts.'
-#     chain = find_chain(x, y)
-#     all_but_last = chain[0:-1]
-#     last_link = chain[-1]
-#     main_phrase = reduce(lambda x, y: x + y, map(report_link, all_but_last))
-#     last_phrase = "and " + report_link(last_link)
-#     new_last_phrase = last_phrase[0:-2] + '.'
-#     return main_phrase + new_last_phrase
 
 def find_qualifiers(category1, category2):
     'Returns list of qualifiers who have stated category1 is a category2.'
@@ -145,95 +141,33 @@ def find_qualifiers(category1, category2):
     return []
 
 def report_chain_with_qualifiers(category1, category2):
-    links = find_chain(category1, category2)
-    if links is not None and len(links) > 0:
-        # used to list all qualifying sources within the chain,
-        # to be used to judge reliability
-        qualifying_sources = []
-        resp = "Because "
-        i = 0
-        while i < len(links) - 1:
-            c1_link = links[i][0]
-            c2_link = links[i][1]
-            isa_qualifiers = find_qualifiers(c1_link, c2_link)
-            if len(isa_qualifiers) >= 1:
-                qualifier = isa_qualifiers[0]
-                qualifying_sources.append(qualifier)
-                resp += qualifier + " "
-                for qualifier in isa_qualifiers[1:]:
-                    qualifying_sources.append(qualifier)
-                    resp += "and " + qualifier + " "
-                if len(isa_qualifiers) > 1:
-                    resp += "say that "
-                else:
-                    resp += "says that "
-
-            resp += report_link([c1_link, c2_link], ",\n")
-        
-            if i + 1 == len(links) - 1:
-                resp += "."
-            else:
-                resp += ",\nand "
-            i += 1
-
-        # At this point, the ISA chain should be fully explored along
-        # within the qualifiers who pointed out relationships, i.e.:
-        # Because a dog is definitely an animal,
-        # and Jones says that an animal is an organism.
-        # Now we check for unreliable sources within the chain:
-        for qualifier in set(qualifying_sources):
-            if qualifier in RELIABILITY:
-                if "unreliable" in RELIABILITY[qualifier]:
-                    resp += "\n"
-                    # this person has been called "unreliable".
-                    # now we explore if this statement has been qualified.
-                    unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
-                    if len(unreliablity_qualifiers) == 1: 
-                        # exactly one person has said this qualifier is unreliable
-                        resp += "However, " + unreliablity_qualifiers[0] + " says that " +\
-                                qualifier + " is an unreliable source,"
-                    elif len(unreliablity_qualifiers) > 1:
-                        # multiple people have said that this qualifier is unreliable
-                        resp += "However, " + unreliablity_qualifiers[0]
-                        for unreliablity_somebody in unreliablity_qualifiers[1:]:
-                            resp += " and " + unreliablity_somebody
-                        resp += " say that " + qualifier + " is an unreliable source,"
-                    else:
-                        # an unqualified statement has been made about this qualifier's
-                        # reliability (the USER wrote "[somebody] is unreliable...")
-                        resp += "However, " + qualifier + " is an unreliable source,"
-
-                    resp += "\nand therefore we cannot be certain about this chain of reasoning."
-
-        return resp
-    return "It is not possible that " +\
-            report_link([category1, category2], ".")
-
-def qualifier_test(category1, category2, depth_limit = 10):
+    """
+    Reports the connections between category1 and category2 with related qualifier
+    information, such as qualifiers and their reliability.
+    """
+    # Gets chain between category1 and category2
     trail = isa_test_with_trail(category1, category2)
-    if len(trail) > 0:
-        resp = "Because "
-        # used to list all qualifying sources within the chain,
-        # to be used to judge reliability
-        qualifying_sources = []
+    if len(trail) > 0: # A chain exists!
+        resp = "Because " # Begin the response string
+        qualifying_sources = [] # Stores all of the qualifiers related to the statement
         i = 0
         while i < len(trail) - 1:
             isa_qualifiers = QUALIFIERS[trail[i]][trail[i + 1]]
-            # check if someone has qualified the statement
-            if len(isa_qualifiers) == 1:
+            # Check if someone has qualified the statement and if so,
+            # list their names.
+            if len(isa_qualifiers) >= 1:
                 qualifier = isa_qualifiers[0]
                 qualifying_sources.append(qualifier)
-                resp += qualifier + " says that "
-            elif len(isa_qualifiers) > 1:
                 resp += isa_qualifiers[0] + " "
-                initial_qualifier = isa_qualifiers[0]
-                qualifying_sources.append(initial_qualifier)
                 for qualifier in isa_qualifiers[1:]:
                     qualifying_sources.append(qualifier)
                     resp += "and " + qualifier + " "
-                resp += "say that "
+                if len(isa_qualifiers) == 1:
+                    resp += "says that "
+                else:
+                    resp += "say that"
             
-            # comparison
+            # List the categories that are being matched.
             resp += ARTICLES[trail[i]] + " " + trail[i] + " is " +\
                     ARTICLES[trail[i+1]]+  " " + trail[i+1] 
             if i + 1 == len(trail) - 1:
@@ -242,36 +176,28 @@ def qualifier_test(category1, category2, depth_limit = 10):
                 resp += ",\nand "
             i += 1
         
-        # At this point, the ISA chain should be fully explored along
-        # within the qualifiers who pointed out relationships, i.e.:
-        # Because a dog is definitely an animal,
-        # and Jones says that an animal is an organism.
+        # At this point, the ISA chain should be fully explored.
         # Now we check for unreliable sources within the chain:
         for qualifier in set(qualifying_sources):
             if qualifier in RELIABILITY:
                 if "unreliable" in RELIABILITY[qualifier]:
                     resp += "\n"
-                    # this person has been called "unreliable".
-                    # now we explore if this statement has been qualified.
+                    # This person has been called "unreliable".
+                    # Now we explore if this statement has been qualified.
                     unreliablity_qualifiers = RELIABILITY[qualifier]["unreliable"]
-                    if len(unreliablity_qualifiers) == 1: 
-                        # exactly one person has said this qualifier is unreliable
-                        resp += "However, " + unreliablity_qualifiers[0] + " says that " +\
-                                qualifier + " is an unreliable source,"
-                    elif len(unreliablity_qualifiers) > 1:
-                        # multiple people have said that this qualifier is unreliable
-                        resp += "However, " + unreliablity_qualifiers[0]
+                    resp += "However, "
+                    if len(unreliablity_qualifiers) >= 1:
+                        resp += unreliablity_qualifiers[0] + " "
                         for unreliablity_somebody in unreliablity_qualifiers[1:]:
-                            resp += " and " + unreliablity_somebody
-                        resp += " say that " + qualifier + " is an unreliable source,"
-                    else:
-                        # an unqualified statement has been made about this qualifier's
-                        # reliability (the USER wrote "[somebody] is unreliable...")
-                        resp += "However, " + qualifier + " is an unreliable source,"
-
+                            resp += "and " + unreliablity_somebody + " "
+                        if len(unreliablity_qualifiers) == 1:
+                            resp += "says that "
+                        else:
+                            resp += "say that "
+                    resp += qualifier + " is an unreliable source,"
                     resp += "\nand therefore we cannot be certain about this chain of reasoning."
         return resp
-    else:
+    else: # Chain does not exist
         return "It is not possible."
 
 def qualifier_for_chain(category1, category2, qualifier = None):
@@ -283,6 +209,7 @@ def qualifier_for_chain(category1, category2, qualifier = None):
         return category2 in qualifierList
 
 def qualify_test(category1, category2):
+    'Returns the list of qualifiers that have stated category1 is a category2.'
     if category1 in QUALIFIERS and category2 in QUALIFIERS[category1]:
         qualifier_list = QUALIFIERS[category1][category2]
         return qualifier_list
@@ -331,7 +258,6 @@ plausible_why_pattern = compile(r"^Why\s+is\s+it\s+possible\s+that\s+(a|an)\s+([
 # Why style 2: Why?
 short_why_pattern = compile(r"^Why(\?)*$", IGNORECASE)
 
-
 last_statement = None
 
 def process(info) :
@@ -375,7 +301,7 @@ def process(info) :
         store_isa_fact(items[1], items[3], name)
         print("I understand.")
         return
-    # Is a [cat1] a [cat2]?
+    # Is a [category1] a [category2]?
     result_match_object = query_pattern.match(info)
     if result_match_object != None :
         items = result_match_object.groups()
@@ -443,8 +369,6 @@ def process(info) :
     result_match_object = reliability_pattern.match(info)
     if result_match_object != None:
         items = result_match_object.groups()
-
-        # TODO: check if name already matched
         store_reliability_statement(items[0], items[2], name)
 
         print("I understand.")
@@ -466,7 +390,6 @@ def process(info) :
             opposite_reliability = "unreliable"
         if name in RELIABILITY:
             resp = ""
-            
             reliability_information = RELIABILITY[name]
             if reliability_term in reliability_information:
                 if not why_q:
@@ -501,20 +424,20 @@ def process(info) :
         print("I have no information about the reliability of " + name + ".")
         return
 
-    # Checking for plausible argument
+    # Checking for plausible argument:
     # "Why is it possible that [category1] is [category2?"
     result_match_object = plausible_why_pattern.match(info)
     if result_match_object != None:
         items = result_match_object.groups()
-        print(qualifier_test(items[1], items[3]))
+        print(report_chain_with_qualifiers(items[1], items[3]))
         return
-    # Checking for other plausible argument
+    # Checking for other plausible argument:
     # "Why?"
     # Requires that a previous statement has been made
     result_match_object = short_why_pattern.match(info)
     if result_match_object != None:
         if last_statement is not None:
-            print(qualifier_test(last_statement[1], last_statement[3]))
+            print(report_chain_with_qualifiers(last_statement[1], last_statement[3]))
             return
         last_statement = None
     print("I do not understand.  You entered: ")
@@ -526,7 +449,7 @@ def answer_why(x, y):
         print("Because they are identical.")
         return
     if isa_test1(x, y):
-        # check who said it
+        # Check who qualified the statement
         isa_qualifiers = find_qualifiers(x,y)
         resp = "Because "
         if len(isa_qualifiers) >= 1:
