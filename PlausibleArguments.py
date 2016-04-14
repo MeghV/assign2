@@ -33,6 +33,12 @@ QUALIFIERS = {}
 #  ( 'Jones': { unreliable: [], reliable: ["Megh"] ) == "Megh says Jones is a reliable source."
 RELIABILITY = {}
 
+# Stores aliases of the node cycles
+#  ( 'being': ['creature'], 'organism': ['creature']) == "Both 'being' and 'organism' are aliases
+#                                                     of 'creature'."
+#  ( 'creature': ['being', 'organism'])
+ALIASES = {}
+
 
 def store_reliability_statement(target, reliableLabel, qualifier = None):
     try:
@@ -225,6 +231,17 @@ def get_article(noun):
     except KeyError:
         return ''
 
+# Checks ISA for cycles.
+def cycle_check(start, end, cyclelist, templist):
+    if get_isa_list(start):
+        for intermediate_category in get_isa_list(start):
+            if intermediate_category == end:
+                cyclelist.append(list(templist))
+            else:
+                templist.append(intermediate_category)
+                cycle_check(intermediate_category, end, cyclelist, templist)
+                templist.pop()
+
 def linneus():
     'The main loop; it gets and processes user input, until "bye".'
     print('This is Linneus.  Please tell me "ISA" facts and ask questions.')
@@ -267,6 +284,7 @@ def process(info) :
         name = items[1]
         statement = items[2]
         info = statement
+
     result_match_object = assertion_pattern.match(info)
     if result_match_object != None :
         items = result_match_object.groups()
@@ -295,8 +313,41 @@ def process(info) :
         
         # Statement can create non-redundant relation
         store_isa_fact(items[1], items[3], name)
-        print("I understand.")
-        return
+        # Check for cycles
+        cyclelist = []
+        cycle_check(items[3], items[3], cyclelist, [items[3]])
+        # If cycle list contains something.
+        if cyclelist:
+            # Builds response statement.
+            resp = "I infer that "
+            for i in cyclelist:
+                for j in i[:-1]:
+                    resp += j + ", "
+                resp += "and " + i[-1] + " are all names for the same thing, and I'll call it " + i[0] + "."
+            print resp
+            # For each list in cyclelist
+            for i in cyclelist:
+                # For each element in each list in cyclelist
+                # Add all elements to a single value list and remove the old key/value pair
+                ALIASES[i[0]] = []
+                for j in i[1:]:
+                    ISA[i[0]] += ISA[j]
+                    INCLUDES[i[0]] += INCLUDES[j]
+                    ALIASES[i[0]] += [j]
+                    ISA.pop(j)
+                    INCLUDES.pop(j)
+                    # For each key/value pair in ISA
+                    # Replace all occurances of the current value with the merged node value
+                    for k in ISA:
+                        if j in ISA[k] and not k == i[0]:
+                            ISA[k].remove(j)
+                            ISA[k].append(i[0])
+                ISA[i[0]].remove(i[0])
+                INCLUDES[i[0]].remove(i[0])
+        else:
+            print("I understand.")
+            return
+
     # Is a [cat1] a [cat2]?
     result_match_object = query_pattern.match(info)
     if result_match_object != None :
@@ -407,9 +458,13 @@ def report_link(link):
     'Returns a phrase that describes one fact.'
     x = link[0]
     y = link[1]
-    a1 = get_article(x)
-    a2 = get_article(y)
-    return a1 + " " + x + " is " + a2 + " " + y + ", "
+
+    if x in ALIASES and y in ALIASES[x]:
+        return y + " is another name for " + x + ", "
+    else:
+        a1 = get_article(x)
+        a2 = get_article(y)
+        return a1 + " " + x + " is " + a2 + " " + y + ", "
     
 def find_chain(x, z):
     'Returns a list of lists, which each sublist representing a link.'
@@ -423,10 +478,21 @@ def find_chain(x, z):
                 return temp
 
 def test() :
-    process("Jones says that an animal is an organism.")
-    process("Jones says that Smith is a reliable source.")
-    process("A dog is an animal.")
-    process("Jones is an unreliable source.")
+    process("A creature is a being.")
+    process("A being is an organism.")
+    process("An organism is a creature.")
+    # print "> A bug is a creature."
+    # process("A bug is a creature.")
+    # print "> Is a bug a being?"
+    # process("Is a bug a being?")
+    # print "> Why is a bug a being?"
+    # process("Why is a bug a being?")
+    # print "> A living-thing is an organism."
+    # process("A living-thing is an organism.")
+    # print "> Is a bug an organism?"
+    # process("Is a bug an organism?")
+    # print "> Why is a bug an organism."
+    # process("Why is a bug an organism.")
 test()
 linneus()
 
